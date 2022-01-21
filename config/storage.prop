@@ -1,0 +1,6 @@
+assetStorage.mutable=true
+assetStorage.localPath=/Users/linnaung/Desktop/simple-app
+assetStorage.branch=main
+assetStorage.remoteUrl=https://github.com/linnaung/data-assets.git
+assetStorage.username=${storage.git.username:theUsername}
+assetStorage.password=${storage.git.token:thePassword}
