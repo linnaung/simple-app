@@ -1,0 +1,489 @@
+ <style>
+  
+  .git-operations__dialog .cardinality-support__group-instance {
+    border: none;
+    padding-left: 2px;
+    padding-bottom: 2px;
+  }
+
+  .git-operations__dialog .semantic-form-input-decorator__label-required {
+    display:none;
+  }
+    
+</style>
+
+<ol class="page-breadcrumb">
+  <li>
+    <mp-link title="Home" url="/">Home</mp-link>
+  </li>
+  <li>
+    <semantic-link title="Administration" iri="http://www.metaphacts.com/resource/admin/">Administration</semantic-link>
+  </li>
+  <li class="active">Apps and Storage Locations</li>
+</ol>
+
+<div class="page">
+  <div class="page__header">
+    <div class='page__header-thumbnail'>
+      <h2><i class="fa fa-th-large fa-2x"></i></h2>
+    </div>
+    <div class='page__header-body'>
+      <h2>Apps and Storage Locations</h2>
+    </div>
+  </div>
+  <div class='page__body'>
+
+    <h2>Installed Apps</h2>
+    
+    <p>
+      Every app has exactly one associated storage. The storage ID is equal to the app ID. <br>
+      If no explicit storage is defined for an <semantic-link title="Apps" uri='[[resolvePrefix "Help:Apps"]]'>app</semantic-link>, the platform creates a standard, non-versioned file storage
+      within the root directory of the respective app.
+    </p>
+ 
+    <hr/>
+		<mp-json-renderer get-url='/rest/admin/apps' template='{{> apps}}'>
+    	<template id='apps'>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>App Id</th>
+              <th>Storage Kind</th>
+              <th>Mutable Storage</th>
+              <th>Remove</th>
+            </tr>
+          </thead>
+        	<tbody>
+          {{#each this}}
+            <tr>
+              <td>{{@index}}</td>
+              <td>
+                {{#if message}} 
+                  <span style='color: red;'>
+                    {{id}}
+                    <mp-popover title="">
+                      <mp-popover-trigger placement="top"  trigger='["hover","focus"]'> 
+                        <i class="fa fa-question-circle" aria-hidden="true"></i>
+                      </mp-popover-trigger>
+                      <mp-popover-content style="background:white;">
+                        <span>{{message}}</span>
+                      </mp-popover-content>
+                    </mp-popover>
+                  </span>
+                {{else}}
+                  {{id}}
+                {{/if}}
+              </td>
+              <td>{{storageKind}}</td>
+              <td>{{mutableStorage}}</td>
+              <td>
+                {{#ifCond id "!==" "runtime"}}
+                    <mp-app-remove application-id="{{id}}">
+                      <button style="padding: 0px 12px;"
+                      	class="btn btn-danger btn-sm"
+                      	[[#unless (hasPermission "app:remove")]]
+                        	disabled
+                          title='App removal is not permitted'
+                        [[/unless]]
+                      >
+                        Remove
+                      </button>
+                    </mp-app-remove>
+                {{/ifCond}}
+              </td>
+            </tr>
+          {{/each}}
+          </tbody>
+        </table>
+      </template>
+    </mp-json-renderer>
+    <br>
+    <mp-overlay-dialog title="Upload & Deploy App" type="modal" bs-size="large">
+      <mp-overlay-dialog-trigger><button type="button" class="btn btn-primary">Upload & Deploy App</button></mp-overlay-dialog-trigger>
+      <mp-overlay-dialog-content>
+        <div>
+           <p>
+             <strong>Please note</strong> that apps need a platform restart in order to be installed properly. 
+          </p>
+          <p>
+             Please refer to the <semantic-link title="App Deployment" uri='[[resolvePrefix "Help:AppDeployment"]]'>app deployment</semantic-link> help for further details.
+          </p>
+          [[#if (hasPermission "app:upload")]]
+          	<mp-app-upload></mp-app-upload>
+          [[else]]
+          	<span style="color:red">You do not have the required permission to upload apps.</span>
+          [[/if]]
+        </div>
+      </mp-overlay-dialog-content>
+    </mp-overlay-dialog>
+    <h2>Connected Storages</h2>
+    Storages in ascending order of priority (c.f. <semantic-link title="Apps" uri='[[resolvePrefix "Help:Storage"]]'>Storage Help</semantic-link>):
+		<hr/>
+    <mp-json-renderer get-url='/rest/admin/storages' template='{{> storages}}'>
+    	<template id='storages'>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Storage Id</th>
+              <th>Storage Kind</th>
+              <th>Mutable Storage</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+        	<tbody>
+          {{#each this}}
+            <tr>
+              <td>{{@index}}</td>
+              <td>{{id}}</td>
+              <td>{{storageKind}}</td>
+              <td>{{mutableStorage}}</td>
+              <td>
+
+                {{#if (cond-and (cond-neq id "metaphacts-platform") (cond-neq id "metaphactory"))}}
+                    <mp-overlay-dialog title="ZIP Export - App Artefacts" type="modal" bs-size="large">
+                      <mp-overlay-dialog-trigger>
+                        <button style="padding: 0px 12px;" class="btn btn-primary btn-sm active">
+                          Export ZIP
+                        </button>
+                      </mp-overlay-dialog-trigger>
+                      <mp-overlay-dialog-content>
+                        <p>
+                          The export will generate a ZIP bundle of all non-binary app artefacts 
+                          (templates, config files, ldp assets) only. If the storage does not contain any of such,
+                          the zip will be empty.
+                        </p>
+                        <p>  
+                    	    Dependent on the underlying storage and 
+                          the number and size of the app artefacts, generating the ZIP may take some time. 
+                          Please be patient and <b>do not try</b> to re-start the download, 
+                          i.e. by pressing the download button twice.<br>
+                        </p>
+                        <mp-file-download delay=2000 post-action="reload" download-url="/rest/admin/storages/{{id}}/zip">
+                          <button class="btn btn-primary btn-sm active">OK. Start Download.</button>
+                        </mp-file-download>
+                      </mp-overlay-dialog-content>
+                    </mp-overlay-dialog>
+              
+                  {{#if (cond-eq storageKind "com.metaphacts.services.storage.git.GitStorage")}} 
+                    {{> ::manage-git-storage-operations storageId=id}}
+                  {{/if}}
+                
+                {{/if}}
+              </td>
+            </tr>
+          {{/each}}
+          </tbody>
+        </table>
+      </template>
+    </mp-json-renderer>
+
+  </div>
+</div>
+
+<template-fragment id='manage-git-storage-operations'>
+  <mp-overlay-dialog title="Synchronize Git" type="modal" bs-size="large" class='git-operations'>
+    <mp-overlay-dialog-trigger>
+      <button style="margin-left: 5px" class="btn btn-secondary btn-sm active">
+        Synchronize Git
+      </button>
+    </mp-overlay-dialog-trigger>
+                      
+    <mp-overlay-dialog-content>
+
+      [[#if (hasPermission "storage:git:status")]]
+      <div>
+        <mp-event-target-refresh id='gitStatusRefresh'>
+          <mp-json-renderer get-url='/rest/admin/storage/git/{{storageId}}/status' template='{{> gitStatus}}'>
+            <template id='gitStatus'>
+              <div class="card-deck">
+                <bs-panel>
+                  <table class="table">
+                    <tbody>
+                      <tr>
+                        <td class='col-sm-2'><b>Local Branch</b></td>
+                        <td>{{this.localBranch}}
+                          <span title='{{this.localCommitId}}'>
+                            (Git Hash: {{string-slice this.localCommitId 0 8}})
+                          </span>
+                        </td>
+                      </tr>
+                      
+                      {{#if this.remoteUrl}}
+                        <tr>
+                          <td class='col-sm-2'><b>Remote URL</b></td>
+                          <td>{{this.remoteUrl}}</td>
+                        </tr>
+                         <tr>
+                          <td class='col-sm-2'><b>Remote Branch</b></td>
+                          <td>{{this.remoteBranch}}
+                            <span title='{{this.remoteCommitId}}'>
+                              (Git Hash: {{string-slice this.remoteCommitId 0 8}})
+                            </span>
+                          </td>
+                        </tr>
+                        
+                        <tr>
+                          <td class='col-sm-2'><b>Remote URL</b></td>
+                          <td>{{this.remoteUrl}}</td>
+                        </tr>
+                        <tr>
+                          <td class='col-sm-2'><b>Sync State</b></td>
+                          <td>{{this.syncState}}
+                            <span style='margin-left:5px;'>
+                              <mp-popover title="">
+                                <mp-popover-trigger placement="right"  trigger='["hover","focus"]'> 
+                                  <i class="fa fa-question-circle" aria-hidden="true"></i>
+                                </mp-popover-trigger>
+                                <mp-popover-content style="background:white;">
+                                  <span>
+                                    The sync state indicates the state of the local branch in comparison to its remote tracking branch. If the local branch is <b>behind</b> the remote tracking branch, a <b>fast-forward merge</b> can be triggered to update it. If the local branch has <b>diverged</b>, a <b>rebase</b> operation can be attempted. Note that if there are non-resolvable conflicts, the rebase operation will be aborted and the Git working tree is set to a clean state. In that case, the conflict needs to be resolved manually in the repository. When the local Git branch is <b>ahead</b>, or on the <b>same commit</b>, no update operation is available.
+                                  </span>
+                                </mp-popover-content>
+                              </mp-popover>
+                            </span>
+                          </td>
+                        </tr>
+                      {{/if}}
+                    </tbody>
+                  </table>
+                  
+                  {{#if this.remoteUrl}}
+                  
+                    {{#if (cond-eq this.syncState "EQUAL")}}
+                      <bs-alert variant='info' style='margin-top:10px'>
+                        The local branch is in sync with the remote repository. No action required.
+                      </bs-alert>
+                    {{else}}
+                      <div>
+                        {{> ::git-operations-form}}
+                      </div>
+                    {{/if}}
+                  {{else}}
+                    <div style="font-size: 12px">This repository is not connected to a remote Git repository</div>
+                  {{/if}}
+                    
+                </bs-panel>
+              </div>
+            </template>
+          </mp-json-renderer>
+        </mp-event-target-refresh
+      </div>
+      [[else]]
+      <div class='page__body'>
+        <bs-alert variant="warning" class="alert-icon">It seems that you do not have permissions for synchronizing Git storages. Please contact your administrator.</bs-alert>
+      </div>
+      [[/if]]
+     
+    </mp-overlay-dialog-content>
+  </mp-overlay-dialog>
+</template-fragment>
+
+
+<template-fragment id="git-operations-form">
+
+  <div style='margin-top: 10px;'>
+    
+    <semantic-form 
+      post-action='none'
+      id='switch-form'
+      form-id='switch-form'
+      fields='[
+        {
+          "id": "operation", 
+          "label":"Please select one of the following synchronization operations", 
+          "maxOccurs": 1, 
+          "minOccurs": 1
+        }
+      ]'
+    >
+              
+      <semantic-form-switch for="operation" switch-on-field="switch-case-type">
+                
+        <semantic-form-switch-case label="Update from remote">
+          <semantic-form-composite-input for="operation" new-subject-template='update' 
+            fields='[{"id": "switch-case-type"}]'>
+            <semantic-form-hidden-input for="switch-case-type" default-value='update'>
+            </semantic-form-hidden-input>
+                    
+          </semantic-form-composite-input>
+        </semantic-form-switch-case>
+
+        <semantic-form-switch-case label="Push to remote">
+          <semantic-form-composite-input for="operation" new-subject-template='push' 
+            fields='[{"id": "switch-case-type"}]'>
+            <semantic-form-hidden-input for="switch-case-type" default-value='push'>
+            </semantic-form-hidden-input>
+                    
+          </semantic-form-composite-input>
+        </semantic-form-switch-case>
+
+        <semantic-form-switch-case label="Reset from remote">
+          <semantic-form-composite-input for="operation" new-subject-template='reset' 
+            fields='[{"id": "switch-case-type"}]'>
+            <semantic-form-hidden-input for="switch-case-type" default-value='reset'>
+            </semantic-form-hidden-input>
+          </semantic-form-composite-input>
+        </semantic-form-switch-case>
+
+      </semantic-form-switch>
+
+      <semantic-form-template template='{{> tmpl}}' debounce='10'>
+        <template id='tmpl'>
+                
+          {{#switch model.fields.operation.single.discriminator.value}}
+            {{#case "reset" break=true}}
+              
+              <mp-text-truncate lines="2" expand="{{> expand}}" collapse="{{> collapse}}" style="font-size: 12px; margin-bottom: 10px;">
+                <template id="expand"><span><a><b>Show details</b></a></span></template>
+                <template id="collapse"><span><a><b>Less details</b></a></span></template>
+                This operation attempts to reset the contents of the local working tree with that of the remote tracking branch. 
+                <br/><br/>First it creates a backup of the current local branch by renaming it with the current timestamp as suffix. Then a fresh checkout of the configured remote tracking branch is performed.
+              </mp-text-truncate>
+                    
+              <semantic-form
+                id='git-reset-form'
+                form-id='git-reset-form'
+                persistence='{
+                  "type": "rest",
+                  "method": "POST",
+                  "endpointTemplate": "/rest/admin/storage/git/{{storage}}/reset"
+                }'
+                post-action='event'
+                fields='[{ "id": "storage"}]'
+              >
+
+                <semantic-form-hidden-input for="storage" default-value='{{storageId}}'>
+                </semantic-form-hidden-input>
+                
+                <button name="submit" class="btn btn-primary">Confirm Reset</button>
+              </semantic-form>
+
+            {{/case}}
+            {{#case "update" break=true}}
+              
+              <mp-text-truncate lines="2" expand="{{> expand}}" collapse="{{> collapse}}" style="font-size: 12px; margin-bottom: 10px;">
+                <template id="expand"><span><a><b>Show details</b></a></span></template>
+                <template id="collapse"><span><a><b>Less details</b></a></span></template>
+                This operation attempts to update the contents of the local working tree with that of the remote tracking branch. 
+                <br/><br/>If the local branch is <b>behind</b> the remote tracking branch, a <b>fast-forward merge</b> can be triggered to update it. If the local branch has <b>diverged</b>, a <b>rebase</b> operation can be attempted. Note that if there are non-resolvable conflicts, the rebase operation will be aborted and the Git working tree is set to a clean state. In that case, the conflict needs to be resolved manually in the repository. When the local Git branch is <b>ahead</b>, or on the <b>same commit</b>, no update operation is available.
+              </mp-text-truncate>
+             
+                    
+              <semantic-form 
+                persistence='{
+                  "type": "rest",
+                  "method": "POST",
+                  "endpointTemplate": "/rest/admin/storage/git/{{storage}}/update"
+                }'
+                post-action='event'
+                id='git-update-form'
+                form-id='git-update-form'
+                fields='[{ "id": "storage"}]'
+    
+              >
+                <semantic-form-hidden-input for="storage" default-value='{{storageId}}'>
+                </semantic-form-hidden-input>
+    
+                <button name="submit" class="btn btn-primary" >Confirm Update</button>
+    
+              </semantic-form>
+
+                    
+            {{/case}}
+            {{#default}}
+
+              <mp-text-truncate lines="2" expand="{{> expand}}" collapse="{{> collapse}}" style="font-size: 12px; margin-bottom: 10px;">
+                <template id="expand"><span><a><b>Show details</b></a></span></template>
+                <template id="collapse"><span><a><b>Less details</b></a></span></template>
+                This operation attempts to push the current local working tree to the requested (new) target branch and allows to create a backup.
+                <br/><br/>The target branch <b>must not</b> exist in the remote (i.e. this operation does not allow to push to an existing branch). In case an existing branch has chosen, a corresponding error will be reported. There is one exception: if the branch name is equal to the current remote branch, this operation can be used to push commits to the remote in a fast-forward operation. Typically, this can be done if the local branch is <b>ahead</b>.
+              </mp-text-truncate>
+              
+                    
+              <semantic-form 
+                id='git-push-form'
+                form-id='git-push-form'
+                persistence='{
+                  "type": "rest",
+                  "method": "POST",
+                  "endpointTemplate": "/rest/admin/storage/git/{{storage}}/push?remoteBranch={{branch-name}}"
+                }'
+                post-action='event'
+                fields='[
+                  { "id": "storage"},
+                  { 
+                    "id": "branch-name",
+                    "label": "Target Branch",
+                    "xsdDatatype": "xsd:string", "maxOccurs":1
+                  }
+                ]'
+              >
+                      
+                <semantic-form-hidden-input for="storage" default-value='{{storageId}}'>
+                </semantic-form-hidden-input>
+                <semantic-form-text-input for='branch-name' placeholder='Enter the name of a non-existing target branch'></semantic-form-text-input>
+                        
+                <button name="submit" class="btn btn-primary">Confirm Push</button>
+              </semantic-form>
+       
+            {{/default}}
+          {{/switch}}
+
+        </template>
+      </semantic-form-template>
+    </semantic-form>
+  </div>
+  
+  <mp-event-proxy 
+    on-event-type='Form.ResourceCreated' 
+    on-event-source='git-update-form' 
+    proxy-event-type='Component.Refresh' 
+    proxy-targets='["gitStatusRefresh"]'>
+  </mp-event-proxy>
+
+  <mp-event-proxy 
+    on-event-type='Form.ResourceCreated' 
+    on-event-source='git-push-form' 
+    proxy-event-type='Component.Refresh' 
+    proxy-targets='["gitStatusRefresh"]'>
+  </mp-event-proxy>
+
+  <mp-event-proxy 
+    on-event-type='Form.ResourceCreated' 
+    on-event-source='git-reset-form' 
+    proxy-event-type='Component.Refresh' 
+    proxy-targets='["gitStatusRefresh"]'>
+  </mp-event-proxy>
+
+  <mp-event-proxy 
+    on-event-type="Form.PersistFailed"
+    on-event-source="git-update-form" 
+    proxy-event-type="Component.TemplateUpdate" 
+    proxy-targets='["git-storage-form-error-render"]'>
+  </mp-event-proxy>
+
+  <mp-event-proxy 
+    on-event-type="Form.PersistFailed"
+    on-event-source="git-push-form" 
+    proxy-event-type="Component.TemplateUpdate" 
+    proxy-targets='["git-storage-form-error-render"]'>
+  </mp-event-proxy>
+
+  <mp-event-proxy 
+    on-event-type="Form.PersistFailed"
+    on-event-source="git-reset-form" 
+    proxy-event-type="Component.TemplateUpdate" 
+    proxy-targets='["git-storage-form-error-render"]'>
+  </mp-event-proxy>
+
+  <mp-event-target-template-render id="git-storage-form-error-render" template="{{> tmpl}}">
+    <template id="tmpl">
+      {{#if error}}
+        <div style='margin-top:10px;'><mp-error error-message="{{pass-value error}}"></mp-error></div>
+      {{/if}}
+    </template>
+  </mp-event-target-template-render>
+</template-fragment>
+
