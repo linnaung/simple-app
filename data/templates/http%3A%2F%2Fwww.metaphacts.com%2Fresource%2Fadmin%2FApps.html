@@ -195,7 +195,7 @@
       [[#if (hasPermission "storage:git:status")]]
       <div>
         <mp-event-target-refresh id='gitStatusRefresh'>
-          <mp-json-renderer get-url='/rest/admin/storage/git/{{storageId}}/status' template='{{> gitStatus}}'>
+          <mp-json-renderer get-url='/metaphactory/rest/admin/storage/git/{{storageId}}/status' template='{{> gitStatus}}'>
             <template id='gitStatus'>
               <div class="card-deck">
                 <bs-panel>
