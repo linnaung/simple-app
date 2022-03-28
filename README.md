@@ -1,1 +1,2 @@
-Test simple app
+Test simple app.
+
