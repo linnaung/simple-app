@@ -1,0 +1,5 @@
+assetStorage.type=git
+assetStorage.mutable=true
+assetStorage.localPath=/apps/data-assets
+assetStorage.branch=main
+#assetStorage.remoteUrl=https://github.com/linnaung/data-assets.git
