@@ -1,4 +1,0 @@
-assetStorage.type=git
-assetStorage.mutable=true
-assetStorage.localPath=/assets
-assetStorage.branch=master
