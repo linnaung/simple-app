@@ -8,7 +8,6 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix mph: <http://www.metaphacts.com/ontologies/platform/repository#> .
 @prefix ephedra: <http://www.metaphacts.com/ontologies/platform/ephedra#> .
-@prefix fedsail: <http://www.openrdf.org/config/sail/federation#> .
 @prefix sparqlr: <http://www.openrdf.org/config/repository/sparql#> .
 
 [] a rep:Repository;

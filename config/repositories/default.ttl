@@ -11,11 +11,12 @@
 @prefix sparqlr: <http://www.openrdf.org/config/repository/sparql#> .
 
 [] a rep:Repository;
-  rep:repositoryID "assets";
-  rdfs:label "assetsrepository for platform.";
+  rep:repositoryID "default";
+  rdfs:label "Native store";
   rep:repositoryImpl [
       rep:repositoryType "openrdf:SailRepository";
       sr:sailImpl [
-          sail:sailType "openrdf:NativeStore"
+          sail:sailType "openrdf:NativeStore";
+          ns:tripleIndexes "spoc,posc"
         ]
     ] .
